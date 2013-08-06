@@ -5,70 +5,118 @@
 
 (def modsmap (atom {:I false :M false}))
 
-(defrecord VerEx [regex])
- 
 
-(defprotocol VerExProt
+(defrecord RecVerEx [src])
+
+
+(def VerEx (RecVerEx. []))
+
+
+(defn make-source [{src :src :as rec}]
+  (let [mods (filter string? (vals @modsmap))]
+    (println src)
+    (s/join "" (concat mods src))))
+
+
+(defprotocol IVerEx
   "lol"
-  (replace [regex string replacement] "heh"))
+  (replace [src string replacement] "heh")
+  (regex [src] "Gives the regex")
+  (source [src] "returns the source"))
 
 
-(extend-protocol VerExProt
-  VerEx
-  (replace [{regex :regex :as expr} string replacement]
-    (s/replace string regex replacement)))
+(extend-protocol IVerEx
+  RecVerEx
+  (replace [{src :src :as expr} string replacement]
+    (let [regexsrc (re-pattern (make-source src))]
+      (s/replace string regexsrc replacement)))
+  (regex [{src :src :as expr}]
+    (let [mods (filter string? (vals @modsmap))]
+      (s/join "" (concat mods src))))
+  (source [{src :src :as expr}]
+    (let [mods (filter string? (vals @modsmap))]
+      (re-pattern (s/join "" (concat mods src))))))
 
-(defn verex  [& args]
-  (let [mods (filter string? (vals modsmap))]
-    (VerEx. (re-pattern (s/join "" (cons mods args))))))
 
-(defn anything  []
-    "(.*)")
+;; Because we lazy
+(defn update-record [rec rule]
+  (update-in rec [:src] conj rule))
 
-(defn anything-but [value]
+(defmacro defrule [nm args & args-body]
+  (let [record (first args)]
+   `(defn ~nm ~args
+     (update-record ~record ~@args-body))))
+
+
+(defrule anything [verex]
+  "(.*)")
+
+
+(defrule anything-but [verex value]
   (str "([^" value "]*)"))
 
-(defn end-of-line []
+
+(defrule end-of-line [verex]
   "$")
 
-(defn maybe [value]
+
+(defrule maybe [verex value]
   (str "(" value ")?"))
 
-(defn start-of-line  []
+
+(defrule start-of-line  [verex]
     "^")
 
-(defn find  [value]
+
+(defrule find  [verex value]
     (str "(" value ")"))
 
-(defn any [value]
+
+(defrule any [verex value]
   (str "([" value "])"))
 
-(defn line-break  []
+
+(defrule line-break  [verex]
     "(\\n|(\\r\\n))")
 
-(defn range [& args]
+
+(defrule range [verex & args]
   (let [from-tos (partition 2 args)]
     (str "([" (s/join "" (for [i from-tos] (s/join "-" i))) "])")))
 
-(defn tab  []
+
+(defrule tab  [verex]
     "\t")
 
-(defn word []
+
+(defrule word [verex]
     "(\\w+)")
 
-(defn OR [& {:keys [value]
-             :or {value nil}}]
+;; or is a keyword
+(defrule OR [verex & {:keys [value]
+                      :or {value nil}}]
   (str "|" (if value (find value))))
 
 
-(defn with-any-case [& {:keys [value]
-                        :or {value false}}]
+(defn with-any-case [verex & {:keys [value]
+                              :or {value false}}]
   (if value
-    (swap! @modsmap update-in :I "(?u)")
-    (swap! @modsmap update-in :I false)))
+    (swap! modsmap assoc-in :I "(?u)")
+    (swap! modsmap assoc-in :I false)))
+
 
 (defn search-one-line [& {:keys [value]
                           :or {value false}}]
   (if value
-    (swap! @modsmap update-in :M "(?m)")
-    (swap! @modsmap update-in :M false)))
+    (swap! modsmap assoc-in [:M] "(?m)")
+    (swap! modsmap assoc-in [:M] false)))
+
+(def tester  (-> VerEx 
+                 (start-of-line)
+                 (find "http")
+                 (maybe "s")
+                 (anything-but " ")
+                 (end-of-line)))
+
+
+
