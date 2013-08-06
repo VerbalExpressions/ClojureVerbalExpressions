@@ -12,17 +12,17 @@
 (def VerEx (RecVerEx. []))
 
 
-(defn make-source [{src :src :as rec}]
+(defn make-source [src]
   (let [mods (filter string? (vals @modsmap))]
-    (println src)
     (s/join "" (concat mods src))))
 
 
 (defprotocol IVerEx
-  "lol"
-  (replace [src string replacement] "heh")
+  "Protocol for the RecVerEx record"
+  (replace [src string replacement] "Replaces a given string with the replacment if the regex is a match")
   (regex [src] "Gives the regex")
-  (source [src] "returns the source"))
+  (source [src] "Returns the source as a string")
+  (match [src string] "Checks if the regex is a match according too the given string." ))
 
 
 (extend-protocol IVerEx
@@ -31,11 +31,14 @@
     (let [regexsrc (re-pattern (make-source src))]
       (s/replace string regexsrc replacement)))
   (regex [{src :src :as expr}]
-    (let [mods (filter string? (vals @modsmap))]
-      (s/join "" (concat mods src))))
+    (re-pattern (make-source src)))
   (source [{src :src :as expr}]
-    (let [mods (filter string? (vals @modsmap))]
-      (re-pattern (s/join "" (concat mods src))))))
+    (make-source src))
+  (match [{src :src :as expr} string]
+    (let [regex (re-pattern (make-source src))]
+      (if (true? re-matches regex string)
+        true
+        false))))
 
 
 ;; Because we lazy
@@ -110,13 +113,5 @@
   (if value
     (swap! modsmap assoc-in [:M] "(?m)")
     (swap! modsmap assoc-in [:M] false)))
-
-(def tester  (-> VerEx 
-                 (start-of-line)
-                 (find "http")
-                 (maybe "s")
-                 (anything-but " ")
-                 (end-of-line)))
-
 
 
