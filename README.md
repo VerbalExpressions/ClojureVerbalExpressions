@@ -42,7 +42,7 @@ user=> (def verbal VerEx)
 (def replace-me "Replace bird with a duck")
 
 ;; Create an expression that looks for the word "bird"
-(def expression (VerEx (find "bird")))
+(def expression (find VerEx "bird"))
 
 ;; Execute the expression in VerEx
 (def result-verex (replace expression replace-me "duck"))
@@ -50,6 +50,6 @@ user=> (def verbal VerEx)
 ```
 ### Shorthand for string replace
 ```clojure
-(def result (replace (VerEx (find "red")) "We have a red house" "blue"))
+(def result (replace (find VerEx "red") "We have a red house" "blue"))
 (println result)
 ```
