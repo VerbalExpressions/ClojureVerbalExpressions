@@ -21,9 +21,10 @@ user=> (def verbal VerEx)
                  (start-of-line)
                  (find "http")
                  (maybe "s")
+                 (find "://")
+                 (maybe "www.")
                  (anything-but " ")
                  (end-of-line)))
-
 
 ;; Create an example URL
 (def test-url "https://www.google.com")
