@@ -1,4 +1,3 @@
-
 ClojureVerbalExpressions
 =======================
 
@@ -16,7 +15,7 @@ user=> (def verbal VerEx)
 
 ### Testing if we have a valid URL
 ```clojure
-# Create an example of how to test for correctly formed URLs
+;; Create an example of how to test for correctly formed URLs
 
 (def tester  (-> VerEx 
                  (start-of-line)
@@ -26,26 +25,26 @@ user=> (def verbal VerEx)
                  (end-of-line)))
 
 
-# Create an example URL
+;; Create an example URL
 (def test-url "https://www.google.com")
 
-# Test if the URL is valid
+;; Test if the URL is valid
 (if (match tester test-url)
   (println "Valid URL"))
 
-#Print the generated regex
+;; Print the generated regex
 (println (source tester)) 
 ;; => ^(http)(s)?(\:\/\/)(www\.)?([^\ ]*)$
 ```
 ### Replacing strings
 ```clojure
-#Create a test string
+;; Create a test string
 (def replace-me "Replace bird with a duck")
 
-#Create an expression that looks for the word "bird"
+;; Create an expression that looks for the word "bird"
 (def expression (VerEx (find "bird")))
 
-#Execute the expression in VerEx
+;; Execute the expression in VerEx
 (def result-verex (replace expression replace-me "duck"))
 (println result-verex)
 ```
