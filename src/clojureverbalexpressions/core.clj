@@ -36,9 +36,9 @@
     (make-source src))
   (match [{src :src :as expr} string]
     (let [regex (re-pattern (make-source src))]
-      (if (true? re-matches regex string)
-        true
-        false))))
+      (if (nil? (re-matches regex string))
+        false
+        true))))
 
 
 ;; Because we lazy
@@ -50,6 +50,8 @@
    `(defn ~nm ~args
      (update-record ~record ~@args-body))))
 
+(defrule add [verex value]
+  (str value))
 
 (defrule anything [verex]
   "(.*)")
@@ -86,6 +88,7 @@
 (defrule range [verex & args]
   (let [from-tos (partition 2 args)]
     (str "([" (s/join "" (for [i from-tos] (s/join "-" i))) "])")))
+
 
 
 (defrule tab  [verex]
