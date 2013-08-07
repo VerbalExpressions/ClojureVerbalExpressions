@@ -36,10 +36,19 @@
     (make-source src))
   (match [{src :src :as expr} string]
     (let [regex (re-pattern (make-source src))]
-      (if (nil? (re-matches regex string))
+      (if (nil? (re-find regex string))
         false
         true))))
 
+(def regex-char-esc-smap
+  (let [esc-chars "()*&^%$#!"]
+    (zipmap esc-chars
+            (map #(str "\\ " %) esc-chars))))
+
+(defn re-escaper [string]
+  (->> string
+       (clojure.core/replace regex-char-esc-smap)
+       (reduce str)))
 
 ;; Because we lazy
 (defn update-record [rec rule]
@@ -54,11 +63,11 @@
   (str value))
 
 (defrule anything [verex]
-  "(.*)")
+  "(?:.*)")
 
 
 (defrule anything-but [verex value]
-  (str "([^" value "]*)"))
+  (str "(?:[^" (re-escaper value) "]*)"))
 
 
 (defrule end-of-line [verex]
@@ -66,7 +75,7 @@
 
 
 (defrule maybe [verex value]
-  (str "(" value ")?"))
+  (str "(?:" (re-escaper value) ")?"))
 
 
 (defrule start-of-line  [verex]
@@ -74,19 +83,21 @@
 
 
 (defrule find  [verex value]
-    (str "(" value ")"))
+    (str "(?:" (re-escaper value) ")"))
+
+(def then find)
 
 
 (defrule any [verex value]
-  (str "([" value "])"))
+  (str "(?:[" (re-escaper value) "])"))
 
 
 (defrule line-break  [verex]
-    "(\\n|(\\r\\n))")
+    "(?:\\n|(?:\\r\\n))")
 
 
 (defrule range [verex & args]
-  (let [from-tos (partition 2 args)]
+  (let [from-tos (partition 2 (for [i args] (re-escaper i)))]
     (str "([" (s/join "" (for [i from-tos] (s/join "-" i))) "])")))
 
 
@@ -96,7 +107,7 @@
 
 
 (defrule word [verex]
-    "(\\w+)")
+    "\\w+")
 
 ;; or is a keyword
 (defrule OR [verex & {:keys [value]
@@ -106,15 +117,19 @@
 
 (defn with-any-case [verex & {:keys [value]
                               :or {value false}}]
-  (if value
-    (swap! modsmap assoc-in :I "(?u)")
-    (swap! modsmap assoc-in :I false)))
+  (do 
+    (if value
+      (swap! modsmap assoc-in [:I] "(?u)")
+      (swap! modsmap assoc-in [:I] false))
+    verex))
 
 
-(defn search-one-line [& {:keys [value]
-                          :or {value false}}]
-  (if value
-    (swap! modsmap assoc-in [:M] "(?m)")
-    (swap! modsmap assoc-in [:M] false)))
+(defn search-one-line [verex & {:keys [value]
+                                :or {value false}}]
+  (do
+    (if value
+      (swap! modsmap assoc-in [:M] "(?m)")
+      (swap! modsmap assoc-in [:M] false))
+    verex))
 
 
