@@ -2,13 +2,13 @@ ClojureVerbalExpressions
 =======================
 
 ## Installation
-To be done...
+Add `[clojureverbalexpression "0.1.1"]` too your project.clj file.
 
 ## Usage
 ```clojure
-user=> (use 'clojureverbalexpressions.core)
+user=> (require '[clojureverbalexpressions :as verex])
 nil
-user=> (def verbal VerEx)
+user=> (def verbal verex/VerEx)
 #'user/verbal
 ```
 ## Examples
