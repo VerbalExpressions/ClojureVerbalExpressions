@@ -85,12 +85,8 @@
 (defn tab [verex]
   (add verex "\t"))
 
-
 (defn word [verex]
-  (add verex "(\\w+)"))
-
-;; or is a keyword
-
+  (add verex "\\w+"))
 
 (defn or
   ([{:keys [prefix suffix] :as v}]
