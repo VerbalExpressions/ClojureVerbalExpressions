@@ -31,7 +31,7 @@
       true)))
 
 (defn sanitize [string]
-  (clojure.string/escape string esc-chars))
+  (s/replace string #"([.$*+?^()\[\]{}\\|])" "\\\\$1"))
 
 
 (defn add [{:keys [prefix source suffix modifier] :as v} value]
