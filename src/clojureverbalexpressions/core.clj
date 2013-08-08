@@ -19,7 +19,7 @@
 
 (extend-protocol IVerEx
   RecVerEx
-  (replace [{regex :pattern :as v} string replacement] 
+  (replace [{regex :pattern :as v} string replacement]
     (s/replace string regex replacement))
   (regex [{regex :pattern :as v}]
     regex)
@@ -37,7 +37,7 @@
 (defn add [{:keys [prefix source suffix modifier] :as v} value]
   ;; Debuging proposes
   ;;(println (str "(?" modifier ")" prefix source value suffix))
-  (assoc v 
+  (assoc v
          :pattern (re-pattern (str "(?" modifier ")" prefix source value suffix))
          :source (str source value)))
 
@@ -94,8 +94,9 @@
 
 (defn or
   ([{:keys [prefix suffix] :as v}]
-   (->  (assoc v :prefix  (str prefix "(?:") :suffix  (str ")" suffix))
+   (-> (assoc v :prefix (str prefix "(?:") :suffix (str ")" suffix))
        (add ")|(?:")))
+
   ([v value]
    (then (or v) value)))
 
