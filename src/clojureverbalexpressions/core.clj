@@ -31,11 +31,7 @@
       true)))
 
 (defn sanitize [string]
-<<<<<<< HEAD
-  (clojure.string/escape string esc-chars))
-=======
   (s/replace string #"([.$*+?^()\[\]{}\\|])" "\\\\$1"))
->>>>>>> ljos-add-unimpl-funcs
 
 
 (defn add [{:keys [prefix source suffix modifier] :as v} value]
@@ -51,15 +47,12 @@
 
 (defn anything-but [verex value]
   (add verex (str "(?:[^" (sanitize value) "]*)")))
-<<<<<<< HEAD
-=======
 
 (defn something [v value]
   (add v "(?:.+)"))
 
 (defn something-but [v value]
   (add v (str "(?:[^" (sanitize value) "]+)")))
->>>>>>> ljos-add-unimpl-funcs
 
 (defn end-of-line [{suffix :suffix :as verex}]
   (add (assoc-in verex [:suffix] (str suffix "$")) ""))
@@ -77,11 +70,9 @@
 
 (defn any [verex value]
   (add verex (str "[" (sanitize value) "]")))
-<<<<<<< HEAD
 
 (defn line-break [verex]
   (add verex "(?:(?:\\n)|(?:\\r\\n))"))
-=======
 
 (def any-of any)
 
@@ -89,7 +80,6 @@
   (add verex "(?:(?:\\n)|(?:\\r\\n))"))
 
 (def br line-break)
->>>>>>> ljos-add-unimpl-funcs
 
 (defn range [verex & args]
   (let [from-tos (partition 2 (for [i args] (sanitize i)))]
