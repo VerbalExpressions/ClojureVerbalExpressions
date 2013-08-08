@@ -108,15 +108,7 @@
   (-> (assoc v (string/replace modifier m ""))
       (add "")))
 
-(defn with-any-case [{modifier :modifier :as verex} enable]
-  (if (= enable false)
-    (add (remove-modifier verex "u") "")
-    (add (assoc verex :modifier (str modifier "u")) "")))
 
-(defn search-one-line [{modifier :modifier :as verex} enable]
-  (if (= enable false)
-    (add (remove-modifier verex "m") "")
-    (add (assoc verex :modifier (str modifier "m")) "")))
 
 (defn multiple [v value]
   (let [value (sanitize value)]
@@ -129,3 +121,15 @@
 (defn end-capture [{suffix :suffix :as v}]
   (-> (assoc v :suffix (subs suffix 0 (dec (count suffix))))
       (add ")")))
+
+(defn with-any-case
+  ([v]
+     (with-any-case v true))
+  ([v b]
+     (if b (add-modifier v "i") (remove-modifier v "i"))))
+
+(defn search-one-line
+  ([v]
+     (search-one-line v true))
+  ([v b]
+     (if b (remove-modifier v "m") (add-modifier v "m"))))
