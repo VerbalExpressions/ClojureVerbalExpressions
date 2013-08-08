@@ -74,7 +74,7 @@
 (def any-of any)
 
 (defn line-break [verex]
-  (add verex "(?:\\n|(?:\\r\\n))"))
+  (add verex "(?:(?:\\n)|(?:\\r\\n))"))
 
 (def br line-break)
 
