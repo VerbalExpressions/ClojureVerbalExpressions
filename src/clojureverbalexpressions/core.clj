@@ -30,8 +30,8 @@
       false
       true)))
 
-(defn re-escaper [string]
-  (s/replace string #"([.$*+?^()\[\]{}\\|])" "\\\\$1"))
+(defn sanitize [string]
+  (clojure.string/escape string esc-chars))
 
 
 (defn add [{:keys [prefix source suffix modifier] :as v} value]
@@ -46,7 +46,7 @@
   (add verex "(?:.*)"))
 
 (defn anything-but [verex value]
-  (add verex (str "(?:[^" (re-escaper value) "]*)")))
+  (add verex (str "(?:[^" (sanitize value) "]*)")))
 
 (defn something [v value]
   (add v "(?:.+)"))
@@ -58,18 +58,18 @@
   (add (assoc-in verex [:suffix] (str suffix "$")) ""))
 
 (defn maybe [verex value]
-  (add verex (str "(?:" (re-escaper value) ")?")))
+  (add verex (str "(?:" (sanitize value) ")?")))
 
 (defn start-of-line [{prefix :prefix :as verex}]
   (add (assoc-in verex [:prefix] (str "^" prefix)) ""))
 
 (defn find [verex value]
-  (add verex (str "(?:" (re-escaper value) ")")))
+  (add verex (str "(?:" (sanitize value) ")")))
 
 (def then find)
 
 (defn any [verex value]
-  (add verex (str "(?:[" (re-escaper value) "])")))
+  (add verex (str "[" (sanitize value) "]")))
 
 (def any-of any)
 
@@ -79,7 +79,7 @@
 (def br line-break)
 
 (defn range [verex & args]
-  (let [from-tos (partition 2 (for [i args] (re-escaper i)))]
+  (let [from-tos (partition 2 (for [i args] (sanitize i)))]
     (add verex (str "([" (s/join "" (for [i from-tos] (s/join "-" i))) "])"))))
 
 (defn tab [verex]
