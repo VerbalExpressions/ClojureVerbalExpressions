@@ -2,10 +2,6 @@
   (:use midje.sweet)
   (:require [clojureverbalexpressions.core :as verex]))
 
-;; nasty hack
-(swap! verex/modsmap assoc-in [:I] false)
-(swap! verex/modsmap assoc-in [:M] false)
-
 (fact "verex renders as strings"
       (def v (-> verex/VerEx (verex/add "^$")))
        (verex/source v) => "^$")
@@ -29,11 +25,11 @@
       (verex/match v "W") => false)
 
 
-;; TODO This is probably not right
 (fact "should match start of line"
       (def v (-> verex/VerEx (verex/start-of-line)))
       (verex/match v "text  ") => true)
 
+;; TODO This is probably not right
 (fact "should match end of line"
       (def v (-> verex/VerEx (verex/start-of-line) (verex/end-of-line)))
       (verex/match v "") => true)
@@ -100,19 +96,19 @@
       (verex/match v "Two Words") => false)
 
 (fact "match when or is fulfilled"
-      (def v (-> verex/VerEx (verex/start-of-line) (verex/anything) (verex/find "G") (verex/OR) (verex/find "h") (verex/end-of-line)))
+      (def v (-> verex/VerEx (verex/start-of-line) (verex/anything) (verex/find "G") (verex/or) (verex/find "h") (verex/end-of-line)))
       (verex/match v "Github") => true)
 
 (fact "should not match on upper case when or condition not fulfilled"
-      (def v (-> verex/VerEx (verex/start-of-line) (verex/anything) (verex/find "G") (verex/OR) (verex/find "h") (verex/end-of-line)))
+      (def v (-> verex/VerEx (verex/start-of-line) (verex/anything) (verex/find "G") (verex/or) (verex/find "h") (verex/end-of-line)))
       (verex/match v "Bitbucket") => false)
 
 (fact "should match on upper case when lower case is given and any case is true"
-      (def v (-> verex/VerEx (verex/start-of-line) (verex/find "THOR") (verex/end-of-line) (verex/with-any-case :value true)))
+      (def v (-> verex/VerEx (verex/start-of-line) (verex/find "THOR") (verex/end-of-line) (verex/with-any-case true)))
       (verex/match v "thor"))
 
 (fact "should match multiple lines"
-      (def v (-> verex/VerEx (verex/start-of-line) (verex/anything) (verex/find "Pong") (verex/anything) (verex/end-of-line) (verex/search-one-line :value true)))
+      (def v (-> verex/VerEx (verex/start-of-line) (verex/anything) (verex/find "Pong") (verex/anything) (verex/end-of-line) (verex/search-one-line true)))
       (verex/match v "Ping \n Pong \n Ping") => true)
 
 (fact "should match email adress"

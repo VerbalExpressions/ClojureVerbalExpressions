@@ -1,20 +1,12 @@
 (ns clojureverbalexpressions.core
   (:require [clojure.string :as s])
-  (:refer-clojure :exclude [find replace range]))
+  (:refer-clojure :exclude [find replace range or]))
 
 
-(def modsmap (atom {:I false :M false}))
+(defrecord RecVerEx [source modifier prefix suffix pattern])
 
 
-(defrecord RecVerEx [src])
-
-
-(def VerEx (RecVerEx. []))
-
-
-(defn make-source [src]
-  (let [mods (filter string? (vals @modsmap))]
-    (s/join "" (concat mods src))))
+(def VerEx (RecVerEx. "" "" "" "" #""))
 
 
 (defprotocol IVerEx
@@ -27,109 +19,105 @@
 
 (extend-protocol IVerEx
   RecVerEx
-  (replace [{src :src :as expr} string replacement]
-    (let [regexsrc (re-pattern (make-source src))]
-      (s/replace string regexsrc replacement)))
-  (regex [{src :src :as expr}]
-    (re-pattern (make-source src)))
-  (source [{src :src :as expr}]
-    (make-source src))
-  (match [{src :src :as expr} string]
-    (let [regex (re-pattern (make-source src))]
-      (if (nil? (re-find regex string))
-        false
-        true))))
+  (replace [{regex :pattern :as v} string replacement] 
+    (s/replace string regex replacement))
+  (regex [{regex :pattern :as v}]
+    regex)
+  (source [{source :source :as v}]
+    source)
+  (match [{regex :pattern :as v} string]
+    (if (nil? (re-find regex string))
+      false
+      true)))
 
-(def regex-char-esc-smap
-  (let [esc-chars "()*&^%$#!"]
-    (zipmap esc-chars
-            (map #(str "\\ " %) esc-chars))))
+(def esc-chars {\. "\\." 
+                \^ "\\^"
+                \$ "\\$"
+                \* "\\*"
+                \+ "\\+"
+                \? "\\?"
+                \( "\\("
+                \) "\\)"
+                \[ "\\["
+                \] "\\]"
+                \{ "\\{"
+                \} "\\}"
+                \\ "\\\\"
+                \| "\\|"})
 
 (defn re-escaper [string]
-  (->> string
-       (clojure.core/replace regex-char-esc-smap)
-       (reduce str)))
-
-;; Because we lazy
-(defn update-record [rec rule]
-  (update-in rec [:src] conj rule))
-
-(defmacro defrule [nm args & args-body]
-  (let [record (first args)]
-   `(defn ~nm ~args
-     (update-record ~record ~@args-body))))
-
-(defrule add [verex value]
-  (str value))
-
-(defrule anything [verex]
-  "(?:.*)")
+  (clojure.string/escape string esc-chars))
 
 
-(defrule anything-but [verex value]
-  (str "(?:[^" (re-escaper value) "]*)"))
+(defn add [{:keys [prefix source suffix modifier] :as v} value]
+  ;; Debuging proposes
+  ;;(println (str "(?" modifier ")" prefix source value suffix))
+  (assoc v 
+         :pattern (re-pattern (str "(?" modifier ")" prefix source value suffix))
+         :source (str source value)))
 
 
-(defrule end-of-line [verex]
-  "$")
+(defn anything [verex]
+  (add verex "(?:.*)"))
 
+(defn anything-but [verex value]
+  (add verex (str "(?:[^" (re-escaper value) "]*)")))
 
-(defrule maybe [verex value]
-  (str "(?:" (re-escaper value) ")?"))
+(defn end-of-line [{suffix :suffix :as verex}]
+  (add (assoc-in verex [:suffix] (str suffix "$")) ""))
 
+(defn maybe [verex value]
+  (add verex (str "(?:" (re-escaper value) ")?")))
 
-(defrule start-of-line  [verex]
-    "^")
+(defn start-of-line [{prefix :prefix :as verex}]
+  (add (assoc-in verex [:prefix] (str "^" prefix)) ""))
 
-
-(defrule find  [verex value]
-    (str "(?:" (re-escaper value) ")"))
+(defn find [verex value]
+  (add verex (str "(?:" (re-escaper value) ")")))
 
 (def then find)
 
+(defn any [verex value]
+  (add verex (str "(?:[" (re-escaper value) "])")))
 
-(defrule any [verex value]
-  (str "(?:[" (re-escaper value) "])"))
+(defn line-break [verex]
+  (add verex "(?:\\n|(?:\\r\\n))"))
 
-
-(defrule line-break  [verex]
-    "(?:\\n|(?:\\r\\n))")
-
-
-(defrule range [verex & args]
+(defn range [verex & args]
   (let [from-tos (partition 2 (for [i args] (re-escaper i)))]
-    (str "([" (s/join "" (for [i from-tos] (s/join "-" i))) "])")))
+    (add verex (str "([" (s/join "" (for [i from-tos] (s/join "-" i))) "])"))))
+
+(defn tab [verex]
+  (add verex "\t"))
 
 
-
-(defrule tab  [verex]
-    "\t")
-
-
-(defrule word [verex]
-    "\\w+")
+(defn word [verex]
+  (add verex "(\\w+)"))
 
 ;; or is a keyword
-(defrule OR [verex & {:keys [value]
-                      :or {value nil}}]
-  (str "|" (if value (find value))))
 
 
-(defn with-any-case [verex & {:keys [value]
-                              :or {value false}}]
-  (do 
-    (if value
-      (swap! modsmap assoc-in [:I] "(?u)")
-      (swap! modsmap assoc-in [:I] false))
-    verex))
+(defn or
+  ([{:keys [prefix suffix] :as v}]
+   (->  (assoc v :prefix  (str prefix "(?:") :suffix  (str ")" suffix))
+       (add ")|(?:")))
+  ([v value]
+   (then (or v) value)))
 
 
-(defn search-one-line [verex & {:keys [value]
-                                :or {value false}}]
-  (do
-    (if value
-      (swap! modsmap assoc-in [:M] "(?m)")
-      (swap! modsmap assoc-in [:M] false))
-    verex))
+(defn remove-modifier [{modifier :modifier :as v} modi]
+  (let [new-str (clojure.string/replace modifier (re-pattern modi) "")]
+    (assoc v :modifier new-str)))
+
+
+(defn with-any-case [{modifier :modifier :as verex} enable]
+  (if (= enable false)
+    (add (remove-modifier verex "u") "")
+    (add (assoc verex :modifier (str modifier "u")) "")))
+
+(defn search-one-line [{modifier :modifier :as verex} enable]
+  (if (= enable false)
+    (add (remove-modifier verex "m") "")
+    (add (assoc verex :modifier (str modifier "m")) "")))
 
 
