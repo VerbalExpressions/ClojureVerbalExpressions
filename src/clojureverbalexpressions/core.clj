@@ -30,23 +30,8 @@
       false
       true)))
 
-(def esc-chars {\. "\\." 
-                \^ "\\^"
-                \$ "\\$"
-                \* "\\*"
-                \+ "\\+"
-                \? "\\?"
-                \( "\\("
-                \) "\\)"
-                \[ "\\["
-                \] "\\]"
-                \{ "\\{"
-                \} "\\}"
-                \\ "\\\\"
-                \| "\\|"})
-
 (defn re-escaper [string]
-  (clojure.string/escape string esc-chars))
+  (s/replace string #"([.$*+?^()\[\]{}\\|])" "\\\\$1"))
 
 
 (defn add [{:keys [prefix source suffix modifier] :as v} value]
