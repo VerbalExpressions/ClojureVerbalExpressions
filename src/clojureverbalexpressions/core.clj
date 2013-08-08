@@ -81,7 +81,7 @@
   (add verex (str "(?:[" (re-escaper value) "])")))
 
 (defn line-break [verex]
-  (add verex "(?:\\n|(?:\\r\\n))"))
+  (add verex "(?:(?:\\n)|(?:\\r\\n))"))
 
 (defn range [verex & args]
   (let [from-tos (partition 2 (for [i args] (re-escaper i)))]
