@@ -31,7 +31,11 @@
       true)))
 
 (defn sanitize [string]
+<<<<<<< HEAD
   (clojure.string/escape string esc-chars))
+=======
+  (s/replace string #"([.$*+?^()\[\]{}\\|])" "\\\\$1"))
+>>>>>>> ljos-add-unimpl-funcs
 
 
 (defn add [{:keys [prefix source suffix modifier] :as v} value]
@@ -47,6 +51,15 @@
 
 (defn anything-but [verex value]
   (add verex (str "(?:[^" (sanitize value) "]*)")))
+<<<<<<< HEAD
+=======
+
+(defn something [v value]
+  (add v "(?:.+)"))
+
+(defn something-but [v value]
+  (add v (str "(?:[^" (sanitize value) "]+)")))
+>>>>>>> ljos-add-unimpl-funcs
 
 (defn end-of-line [{suffix :suffix :as verex}]
   (add (assoc-in verex [:suffix] (str suffix "$")) ""))
@@ -64,9 +77,19 @@
 
 (defn any [verex value]
   (add verex (str "[" (sanitize value) "]")))
+<<<<<<< HEAD
 
 (defn line-break [verex]
   (add verex "(?:(?:\\n)|(?:\\r\\n))"))
+=======
+
+(def any-of any)
+
+(defn line-break [verex]
+  (add verex "(?:(?:\\n)|(?:\\r\\n))"))
+
+(def br line-break)
+>>>>>>> ljos-add-unimpl-funcs
 
 (defn range [verex & args]
   (let [from-tos (partition 2 (for [i args] (sanitize i)))]
@@ -86,11 +109,19 @@
   ([v value]
    (then (or v) value)))
 
+(defn add-modifier [{modifier :modifier :as v}  m]
+  (-> (assoc v :modifier (str m modifier))
+      (add "")))
 
-(defn remove-modifier [{modifier :modifier :as v} modi]
-  (let [new-str (clojure.string/replace modifier (re-pattern modi) "")]
-    (assoc v :modifier new-str)))
+(defn remove-modifier [{modifier :modifier :as v} m]
+  (-> (assoc v (string/replace modifier m ""))
+      (add "")))
 
+
+
+(defn multiple [v value]
+  (let [value (sanitize value)]
+    (add v (case (last value) (\* \+) value (str value "+")))))
 
 
 (defn with-any-case
@@ -104,4 +135,12 @@
      (search-one-line v true))
   ([v b]
      (if b (remove-modifier v "m") (add-modifier v "m"))))
+
+(defn begin-capture [{suffix :suffix :as v}]
+  (-> (assoc v :suffix (str suffix ")"))
+      (add "(")))
+
+(defn end-capture [{suffix :suffix :as v}]
+  (-> (assoc v :suffix (subs suffix 0 (dec (count suffix))))
+      (add ")")))
 
