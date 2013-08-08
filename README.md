@@ -49,8 +49,9 @@ user=> (def verbal verex/VerEx)
 (def result-verex (replace expression replace-me "duck"))
 (println result-verex)
 ```
-### Shorthand for string replace
+### "Shorthand" for string replace
 ```clojure
+;; (def result (clojure.string/replace "We have a red house" #"red" "blue")
 (def result (replace (find VerEx "red") "We have a red house" "blue"))
 (println result)
 ```
