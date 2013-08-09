@@ -2,8 +2,8 @@
   (:require [clojure.string :as s])
   (:refer-clojure :exclude [find replace range or]))
 
-
-(def VerEx {:source ""  :modifier "" :prefix "" :suffix "" :pattern #""})
+;; The VE should start matching on all lines.
+(def VerEx {:source "" :modifier "m" :prefix "" :suffix "" :pattern #"(?m)"})
 
 (defn replace [{regex :pattern :as v} string replacement]
   (s/replace string regex replacement))
@@ -108,7 +108,9 @@
   ([v]
      (search-one-line v true))
   ([v b]
-     (if b (add-modifier v "m") (remove-modifier v "m"))))
+     ;; As the VE does matches on all lines, we need to remove the
+     ;; modifier when we want to select on one line.
+     (if b (remove-modifier v "m") (add-modifier v "m"))))
 
 (defn begin-capture [{suffix :suffix :as v}]
   (-> (assoc v :suffix (str suffix ")"))
@@ -117,4 +119,3 @@
 (defn end-capture [{suffix :suffix :as v}]
   (-> (assoc v :suffix (subs suffix 0 (dec (count suffix))))
       (add ")")))
-
