@@ -2,8 +2,10 @@
   (:require [clojure.string :as s])
   (:refer-clojure :exclude [find replace range or]))
 
+(defrecord VerbalExpression [source modifier prefix suffix pattern])
+
 ;; The VE should start matching on all lines.
-(def VerEx {:source "" :modifier "m" :prefix "" :suffix "" :pattern #"(?m)"})
+(def VerEx (VerbalExpression. "" "m" "" "" #"(?m)"))
 
 (defn replace [{regex :pattern :as v} string replacement]
   (s/replace string regex replacement))
