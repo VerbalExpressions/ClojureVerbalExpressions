@@ -29,11 +29,9 @@
       (def v (-> verex/VerEx (verex/start-of-line)))
       (verex/match v "text  ") => true)
 
-;; TODO This is probably not right
 (fact "should match end of line"
       (def v (-> verex/VerEx (verex/start-of-line) (verex/end-of-line)))
-      (verex/match v "") => true)
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+      (verex/match v "") => false)
 
 (fact "matches anything"
       (def v (-> verex/VerEx (verex/start-of-line) (verex/anything) (verex/end-of-line)))
@@ -108,7 +106,7 @@
       (verex/match v "thor"))
 
 (fact "should match multiple lines"
-      (def v (-> verex/VerEx (verex/start-of-line) (verex/anything) (verex/find "Pong") (verex/anything) (verex/end-of-line) (verex/search-one-line true)))
+      (def v (-> verex/VerEx (verex/start-of-line) (verex/anything) (verex/find "Pong") (verex/anything) (verex/end-of-line) (verex/search-one-line false)))
       (verex/match v "Ping \n Pong \n Ping") => true)
 
 (fact "should match email adress"
