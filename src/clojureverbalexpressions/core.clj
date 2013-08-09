@@ -3,36 +3,24 @@
   (:refer-clojure :exclude [find replace range or]))
 
 
-(defrecord RecVerEx [source modifier prefix suffix pattern])
+(def VerEx {:source ""  :modifier "" :prefix "" :suffix "" :pattern #""})
 
+(defn replace [{regex :pattern :as v} string replacement]
+  (s/replace string regex replacement))
 
-(def VerEx (RecVerEx. "" "" "" "" #""))
+(defn regex [{regex :pattern :as v} string replacement]
+  regex)
 
+(defn source [{source :source :as v}]
+  source)
 
-(defprotocol IVerEx
-  "Protocol for the RecVerEx record"
-  (replace [src string replacement] "Replaces a given string with the replacment if the regex is a match")
-  (regex [src] "Gives the regex")
-  (source [src] "Returns the source as a string")
-  (match [src string] "Checks if the regex is a match according too the given string." ))
-
-
-(extend-protocol IVerEx
-  RecVerEx
-  (replace [{regex :pattern :as v} string replacement]
-    (s/replace string regex replacement))
-  (regex [{regex :pattern :as v}]
-    regex)
-  (source [{source :source :as v}]
-    source)
-  (match [{regex :pattern :as v} string]
-    (if (nil? (re-find regex string))
-      false
-      true)))
+(defn match [{regex :pattern :as v} string]
+  (if (nil? (re-find regex string))
+    false
+    true))
 
 (defn sanitize [string]
   (s/replace string #"([.$*+?^()\[\]{}\\|])" "\\\\$1"))
-
 
 (defn add [{:keys [prefix source suffix modifier] :as v} value]
   ;; Debuging proposes
@@ -40,7 +28,6 @@
   (assoc v
          :pattern (re-pattern (str "(?" modifier ")" prefix source value suffix))
          :source (str source value)))
-
 
 (defn anything [verex]
   (add verex "(?:.*)"))
@@ -104,15 +91,12 @@
       (add "")))
 
 (defn remove-modifier [{modifier :modifier :as v} m]
-  (-> (assoc v (string/replace modifier m ""))
+  (-> (assoc v :modifier (s/replace modifier m ""))
       (add "")))
-
-
 
 (defn multiple [v value]
   (let [value (sanitize value)]
     (add v (case (last value) (\* \+) value (str value "+")))))
-
 
 (defn with-any-case
   ([v]
@@ -124,7 +108,7 @@
   ([v]
      (search-one-line v true))
   ([v b]
-     (if b (remove-modifier v "m") (add-modifier v "m"))))
+     (if b (add-modifier v "m") (remove-modifier v "m"))))
 
 (defn begin-capture [{suffix :suffix :as v}]
   (-> (assoc v :suffix (str suffix ")"))
