@@ -7,4 +7,4 @@
                  [midje "1.5.1"]]
   :profiles  {:dev  {:dependencies  [[midje "1.5.1"]]}}
   :scm {:name "git"
-        :url "https://github.com/Foxboron/clojureverbalexpressions"})
+        :url "https://github.com/VerbalExpressions/ClojureVerbalExpressions"})
