@@ -60,9 +60,6 @@
 (defn any [verex value]
   (add verex (str "[" (sanitize value) "]")))
 
-(defn line-break [verex]
-  (add verex "(?:(?:\\n)|(?:\\r\\n))"))
-
 (def any-of any)
 
 (defn line-break [verex]
