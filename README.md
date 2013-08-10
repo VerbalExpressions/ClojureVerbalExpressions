@@ -2,7 +2,7 @@ ClojureVerbalExpressions
 =======================
 
 ## Installation
-Add `[clojureverbalexpression "0.2.1"]` too your project.clj file.
+Add `[clojureverbalexpressions "0.2.1"]` too your project.clj file.
 
 ## Usage
 ```clojure
