@@ -1,4 +1,4 @@
-(defproject clojureverbalexpressions "0.2.0"
+(defproject clojureverbalexpressions "0.2.1"
   :description "Port of the Verbal Expressions lib for Clojure"
   :url "http://github.com/Foxboron/clojureverbalexpressions"
   :license {:name "Eclipse Public License"
@@ -7,4 +7,4 @@
                  [midje "1.5.1"]]
   :profiles  {:dev  {:dependencies  [[midje "1.5.1"]]}}
   :scm {:name "git"
-        :url "https://github.com/Foxboron/clojureverbalexpressions"})
+        :url "https://github.com/VerbalExpressions/ClojureVerbalExpressions"})
