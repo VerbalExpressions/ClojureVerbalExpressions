@@ -7,16 +7,16 @@
 ;; The VE should start matching on all lines.
 (def VerEx (VerbalExpression. "" "m" "" "" #"(?m)"))
 
-(defn replace [{regex :pattern :as v} string replacement]
+(defn replace [{regex :pattern} string replacement]
   (s/replace string regex replacement))
 
-(defn regex [{regex :pattern :as v} string replacement]
+(defn regex [{regex :pattern}]
   regex)
 
-(defn source [{source :source :as v}]
+(defn source [{source :source}]
   source)
 
-(defn match [{regex :pattern :as v} string]
+(defn match [{regex :pattern} string]
   (if (nil? (re-find regex string))
     false
     true))
