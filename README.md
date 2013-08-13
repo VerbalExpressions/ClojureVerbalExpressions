@@ -55,3 +55,5 @@ user=> (def verbal verex/VerEx)
 (def result (replace (find VerEx "red") "We have a red house" "blue"))
 (println result)
 ```
+## Other implementations  
+You can view all implementations on [VerbalExpressions.github.io](http://VerbalExpressions.github.io)
