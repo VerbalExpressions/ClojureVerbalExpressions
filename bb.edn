@@ -1,0 +1,17 @@
+{:paths ["src" "test"]
+ :tasks
+ {test:clj  {:doc "Run the tests on the JVM"
+             :task (shell "lein test")}
+  test:bb   {:doc "Run the tests in Babashka"
+             :requires ([clojure.test :as t]
+                        [clojureverbalexpressions.core-test])
+             :task (when-not (t/successful? (t/run-tests 'clojureverbalexpressions.core-test))
+                     (System/exit 1))}
+  test:cljs {:doc "Run the tests in ClojureScript on Node.js"
+             :task (do (clojure "-Sdeps" (pr-str '{:paths ["src" "test"]
+                                                    :deps {org.clojure/clojurescript {:mvn/version "1.12.145"}}})
+                                "-M" "-m" "cljs.main" "-t" "node" "-o" "out/test.js"
+                                "-c" "clojureverbalexpressions.test-runner")
+                       (shell "node out/test.js"))}
+  test      {:doc "Run the tests on all platforms"
+             :depends [test:clj test:bb test:cljs]}}}
