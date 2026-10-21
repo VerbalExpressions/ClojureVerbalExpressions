@@ -1,120 +1,117 @@
 (ns clojureverbalexpressions.core-test
-  (:use midje.sweet)
-  (:require [clojureverbalexpressions.core :as verex]))
+  (:require [clojure.test :refer [deftest is]]
+            [clojureverbalexpressions.core :as verex]))
 
-(fact "verex renders as strings"
-      (def v (-> verex/VerEx (verex/add "^$")))
-       (verex/source v) => "^$")
+(deftest verex-renders-as-strings
+  (let [v (-> verex/VerEx (verex/add "^$"))]
+    (is (= "^$" (verex/source v)))))
 
-(fact "matches characters in range"
-      (def v (-> verex/VerEx (verex/start-of-line) (verex/range "a" "c")))
-      (verex/match v "a") => true
-      (verex/match v "b") => true
-      (verex/match v "c") => true)
+(deftest matches-characters-in-range
+  (let [v (-> verex/VerEx (verex/start-of-line) (verex/range "a" "c"))]
+    (is (true? (verex/match v "a")))
+    (is (true? (verex/match v "b")))
+    (is (true? (verex/match v "c")))))
 
-(fact "does not match characters outside of range"
-      (def v (-> verex/VerEx (verex/start-of-line) (verex/range "a" "b" "X" "Z")))
-      (doseq [i ["a" "b"]]
-        (verex/match v i) => true)
-      (doseq [i ["X" "Y" "Z"]]
-        (verex/match v i) => true))
+(deftest matches-characters-in-several-ranges
+  (let [v (-> verex/VerEx (verex/start-of-line) (verex/range "a" "b" "X" "Z"))]
+    (doseq [i ["a" "b"]]
+      (is (true? (verex/match v i))))
+    (doseq [i ["X" "Y" "Z"]]
+      (is (true? (verex/match v i))))))
 
-(fact "should not match chars outside of range"
-      (def v (-> verex/VerEx (verex/start-of-line) (verex/range "a" "b" "X" "Z")))
-      (verex/match v "c") => false
-      (verex/match v "W") => false)
+(deftest should-not-match-chars-outside-of-range
+  (let [v (-> verex/VerEx (verex/start-of-line) (verex/range "a" "b" "X" "Z"))]
+    (is (false? (verex/match v "c")))
+    (is (false? (verex/match v "W")))))
 
+(deftest should-match-start-of-line
+  (let [v (-> verex/VerEx (verex/start-of-line))]
+    (is (true? (verex/match v "text  ")))))
 
-(fact "should match start of line"
-      (def v (-> verex/VerEx (verex/start-of-line)))
-      (verex/match v "text  ") => true)
+(deftest should-match-end-of-line
+  (let [v (-> verex/VerEx (verex/start-of-line) (verex/end-of-line))]
+    (is (false? (verex/match v "")))))
 
-(fact "should match end of line"
-      (def v (-> verex/VerEx (verex/start-of-line) (verex/end-of-line)))
-      (verex/match v "") => false)
+(deftest matches-anything
+  (let [v (-> verex/VerEx (verex/start-of-line) (verex/anything) (verex/end-of-line))]
+    (is (true? (verex/match v "!#¤%&/()=?`-,'*|")))))
 
-(fact "matches anything"
-      (def v (-> verex/VerEx (verex/start-of-line) (verex/anything) (verex/end-of-line)))
-      (verex/match v "!#¤%&/()=?`-,'*|") => true)
+(deftest should-match-anything-except-the-specified-element-when-not-found
+  (let [v (-> verex/VerEx (verex/start-of-line) (verex/anything-but "X") (verex/end-of-line))]
+    (is (true? (verex/match v "Y Files")))))
 
-(fact "should match anything except the specefied element when not found"
-      (def v (-> verex/VerEx (verex/start-of-line) (verex/anything-but "X") (verex/end-of-line)))
-      (verex/match v "Y Files") => true)
+(deftest should-not-match-anything-except-the-specified-element-when-found
+  (let [v (-> verex/VerEx (verex/start-of-line) (verex/anything-but "X") (verex/end-of-line))]
+    (is (false? (verex/match v "VerEX")))))
 
-(fact "should match anything expect specefied element when found"
-      (def v (-> verex/VerEx (verex/start-of-line) (verex/anything-but "X") (verex/end-of-line)))
-      (verex/match v "VerEX") => false)
+(deftest finds-element
+  (let [v (-> verex/VerEx (verex/start-of-line) (verex/find "Wally") (verex/end-of-line))]
+    (is (true? (verex/match v "Wally")))))
 
-(fact "finds element"
-      (def v (-> verex/VerEx (verex/start-of-line) (verex/find "Wally") (verex/end-of-line)))
-      (verex/match v "Wally") => true)
+(deftest doesnt-find-element
+  (let [v (-> verex/VerEx (verex/start-of-line) (verex/find "Wally") (verex/end-of-line))]
+    (is (false? (verex/match v "Wall-e")))))
 
-(fact "dosnt find element"
-      (def v (-> verex/VerEx (verex/start-of-line) (verex/find "Wally") (verex/end-of-line)))
-      (verex/match v "Wall-e") => false)
+(deftest match-when-the-element-is-maybe-there
+  (let [v (-> verex/VerEx (verex/start-of-line) (verex/find "Clojure1.") (verex/maybe "5") (verex/end-of-line))]
+    (is (true? (verex/match v "Clojure1.5")))))
 
-(fact "match when the element i maybe there"
-      (def v (-> verex/VerEx (verex/start-of-line) (verex/find "Clojure1.") (verex/maybe "5") (verex/end-of-line)))
-      (verex/match v "Clojure1.5") => true)
+(deftest match-when-the-possible-element-is-gone
+  (let [v (-> verex/VerEx (verex/start-of-line) (verex/find "Clojure1.") (verex/maybe "5") (verex/end-of-line))]
+    (is (true? (verex/match v "Clojure1.")))))
 
-(fact "match when the the possible element is gone"
-      (def v (-> verex/VerEx (verex/start-of-line) (verex/find "Clojure1.") (verex/maybe "5") (verex/end-of-line)))
-      (verex/match v "Clojure1.") => true)
+(deftest should-match-on-any-when-element-is-found
+  (let [v (-> verex/VerEx (verex/start-of-line) (verex/any "Q") (verex/anything) (verex/end-of-line))]
+    (is (true? (verex/match v "Query")))))
 
-(fact "should match on any when element is found"
-      (def v (-> verex/VerEx (verex/start-of-line) (verex/any "Q") (verex/anything) (verex/end-of-line)))
-      (verex/match v "Query") => true)
+(deftest should-not-match-on-any-when-element-is-not-found
+  (let [v (-> verex/VerEx (verex/start-of-line) (verex/any "Q") (verex/anything) (verex/end-of-line))]
+    (is (false? (verex/match v "W")))))
 
-(fact "should not match on any when element is not found"
-      (def v (-> verex/VerEx (verex/start-of-line) (verex/any "Q") (verex/anything) (verex/end-of-line)))
-      (verex/match v "W") => false)
+(deftest should-match-when-line-break-is-there
+  (let [v (-> verex/VerEx (verex/start-of-line) (verex/anything) (verex/line-break) (verex/anything) (verex/end-of-line))]
+    (is (true? (verex/match v "Marco \r\n Polo")))))
 
-(fact "should match when line break is there"
-      (def v (-> verex/VerEx (verex/start-of-line) (verex/anything) (verex/line-break) (verex/anything) (verex/end-of-line)))
-      (verex/match v "Marco \r\n Polo") => true)
+(deftest should-not-match-when-line-breaks-are-none
+  (let [v (-> verex/VerEx (verex/start-of-line) (verex/anything) (verex/line-break) (verex/anything) (verex/end-of-line))]
+    (is (false? (verex/match v "Marco Polo")))))
 
-(fact "should not match with line breaks are none"
-      (def v (-> verex/VerEx (verex/start-of-line) (verex/anything) (verex/line-break) (verex/anything) (verex/end-of-line)))
-      (verex/match v "Marco Polo") => false)
+(deftest should-match-when-tab-is-present
+  (let [v (-> verex/VerEx (verex/start-of-line) (verex/anything) (verex/tab) (verex/end-of-line))]
+    (is (true? (verex/match v "  \t")))))
 
-(fact "Should match when tab is present"
-      (def v (-> verex/VerEx (verex/start-of-line) (verex/anything) (verex/tab) (verex/end-of-line)))
-      (verex/match v "  \t") => true)
+(deftest should-not-match-when-tab-is-missing
+  (let [v (-> verex/VerEx (verex/start-of-line) (verex/anything) (verex/tab) (verex/end-of-line))]
+    (is (false? (verex/match v "Nope")))))
 
-(fact "should not match when tab is missing"
-      (def v (-> verex/VerEx (verex/start-of-line) (verex/anything) (verex/tab) (verex/end-of-line)))
-      (verex/match v "Nope") => false)
+(deftest match-one-word
+  (let [v (-> verex/VerEx (verex/start-of-line) (verex/word) (verex/end-of-line))]
+    (is (true? (verex/match v "OneWord")))))
 
-(fact "match one word"
-      (def v (-> verex/VerEx (verex/start-of-line) (verex/word) (verex/end-of-line)))
-      (verex/match v "OneWord") => true)
+(deftest not-match-when-two-words-are-present
+  (let [v (-> verex/VerEx (verex/start-of-line) (verex/word) (verex/end-of-line))]
+    (is (false? (verex/match v "Two Words")))))
 
-(fact "not match when two words are present"
-      (def v (-> verex/VerEx (verex/start-of-line) (verex/word) (verex/end-of-line)))
-      (verex/match v "Two Words") => false)
+(deftest match-when-or-is-fulfilled
+  (let [v (-> verex/VerEx (verex/start-of-line) (verex/anything) (verex/find "G") (verex/or) (verex/find "h") (verex/end-of-line))]
+    (is (true? (verex/match v "Github")))))
 
-(fact "match when or is fulfilled"
-      (def v (-> verex/VerEx (verex/start-of-line) (verex/anything) (verex/find "G") (verex/or) (verex/find "h") (verex/end-of-line)))
-      (verex/match v "Github") => true)
+(deftest should-not-match-when-or-condition-not-fulfilled
+  (let [v (-> verex/VerEx (verex/start-of-line) (verex/anything) (verex/find "G") (verex/or) (verex/find "h") (verex/end-of-line))]
+    (is (false? (verex/match v "Bitbucket")))))
 
-(fact "should not match on upper case when or condition not fulfilled"
-      (def v (-> verex/VerEx (verex/start-of-line) (verex/anything) (verex/find "G") (verex/or) (verex/find "h") (verex/end-of-line)))
-      (verex/match v "Bitbucket") => false)
+(deftest should-match-on-upper-case-when-lower-case-is-given-and-any-case-is-true
+  (let [v (-> verex/VerEx (verex/start-of-line) (verex/find "THOR") (verex/end-of-line) (verex/with-any-case true))]
+    (is (true? (verex/match v "thor")))))
 
-(fact "should match on upper case when lower case is given and any case is true"
-      (def v (-> verex/VerEx (verex/start-of-line) (verex/find "THOR") (verex/end-of-line) (verex/with-any-case true)))
-      (verex/match v "thor"))
+(deftest should-match-multiple-lines
+  (let [v (-> verex/VerEx (verex/start-of-line) (verex/anything) (verex/find "Pong") (verex/anything) (verex/end-of-line) (verex/search-one-line false))]
+    (is (true? (verex/match v "Ping \n Pong \n Ping")))))
 
-(fact "should match multiple lines"
-      (def v (-> verex/VerEx (verex/start-of-line) (verex/anything) (verex/find "Pong") (verex/anything) (verex/end-of-line) (verex/search-one-line false)))
-      (verex/match v "Ping \n Pong \n Ping") => true)
+(deftest should-match-email-address
+  (let [v (-> verex/VerEx (verex/start-of-line) (verex/word) (verex/then "@") (verex/word) (verex/then ".") (verex/word) (verex/end-of-line))]
+    (is (true? (verex/match v "mail@mail.com")))))
 
-(fact "should match email adress"
-      (def v (-> verex/VerEx (verex/start-of-line) (verex/word) (verex/then "@") (verex/word) (verex/then ".") (verex/word) (verex/end-of-line)))
-      (verex/match v "mail@mail.com") => true)
-
-(fact "should match url"
-      (def v (-> verex/VerEx (verex/start-of-line) (verex/then "http") (verex/maybe "s") (verex/then "://") (verex/maybe "www.") (verex/word) (verex/then ".") (verex/word) (verex/maybe "/") (verex/end-of-line)))
-      (verex/match v "https://google.com") => true)
-
-
+(deftest should-match-url
+  (let [v (-> verex/VerEx (verex/start-of-line) (verex/then "http") (verex/maybe "s") (verex/then "://") (verex/maybe "www.") (verex/word) (verex/then ".") (verex/word) (verex/maybe "/") (verex/end-of-line))]
+    (is (true? (verex/match v "https://google.com")))))

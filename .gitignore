@@ -1,3 +1,4 @@
+# Build output
 /target
 /lib
 /classes
@@ -6,8 +7,33 @@ pom.xml
 pom.xml.asc
 *.jar
 *.class
+
+# Leiningen
+.lein-*
+
+# Clojure CLI
+.cpcache/
+
+# REPL
+.nrepl-port
+.nrepl-history
+.socket-repl-port
+.rebel_readline_history
+.portal/
+
+# clj-kondo and clojure-lsp caches (config stays versioned)
+.clj-kondo/.cache/
+.lsp/.cache/
+.lsp/sqlite*.db
+
+# Editors
+.calva/output-window/
+.calva/repl.calva-repl
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
 *.swp
-.lein-deps-sum
-.lein-failures
-.lein-plugins
-.lein-repl-history
+*~
