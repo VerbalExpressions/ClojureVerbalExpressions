@@ -5,7 +5,7 @@
 (defrecord VerbalExpression [source modifier prefix suffix pattern])
 
 ;; The VE should start matching on all lines.
-(def VerEx (VerbalExpression. "" "m" "" "" #"(?m)"))
+(def VerEx (VerbalExpression. "" "m" "" "" (re-pattern "(?m)")))
 
 (defn replace [{regex :pattern} string replacement]
   (s/replace string regex replacement))
@@ -22,7 +22,7 @@
     true))
 
 (defn sanitize [string]
-  (s/replace string #"([.$*+?^()\[\]{}\\|])" "\\\\$1"))
+  (s/replace string #"([.$*+?^()\[\]{}\\|])" #(str "\\" (second %))))
 
 (defn add [{:keys [prefix source suffix modifier] :as v} value]
   ;; Debuging proposes
@@ -86,7 +86,7 @@
    (then (or v) value)))
 
 (defn add-modifier [{modifier :modifier :as v}  m]
-  (-> (assoc v :modifier (str m modifier))
+  (-> (assoc v :modifier (if (s/includes? modifier m) modifier (str m modifier)))
       (add "")))
 
 (defn remove-modifier [{modifier :modifier :as v} m]

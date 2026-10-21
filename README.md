@@ -1,8 +1,11 @@
 ClojureVerbalExpressions
 =======================
 
+Works with Clojure, ClojureScript and Babashka.
+
 ## Installation
 Add `[clojureverbalexpressions "0.2.1"]` too your project.clj file.
+For ClojureScript, add it to `:dependencies` in `shadow-cljs.edn`.
 
 ## Usage
 ```clojure
